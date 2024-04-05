@@ -1,12 +1,11 @@
-import { StatusBar } from 'expo-status-bar';
+import 'react-native-gesture-handler';
 import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Router from './src/Router';
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Salut!</Text>
-      <StatusBar style="auto" />
-    </View>
+      <Router />
   );
 }
 
