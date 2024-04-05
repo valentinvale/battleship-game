@@ -1,7 +1,11 @@
 import Register from "../../Components/Register"
+import { useAuth } from "../../Hooks/AuthContext";
 import { register } from "../../api/api"
 
 const RegisterScreen = () => {
-    return <Register onSubmit={register}/>
+
+    const auth = useAuth();
+
+    return <Register onSubmit={auth.register}/>
 }
 export default RegisterScreen;

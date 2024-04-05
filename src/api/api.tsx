@@ -26,7 +26,8 @@ export const register = async (email: string, password: string) => {
     const response = await fetch(`${baseURL}/auth/register`, {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "accept": "application/json"
         },
         body: JSON.stringify({email, password})
     });
@@ -35,6 +36,46 @@ export const register = async (email: string, password: string) => {
 
     if (response.ok) {
         return data.accessToken;
+    } else {
+        throw new Error(data.message);
+    }
+}
+
+export const listGames = async (token: string) => {
+    const response = await fetch(`${baseURL}/game`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+            "authorization": `Bearer ${token}`
+        }
+    });
+
+    const data = await response.json();
+    //console.log(data);
+
+    if (response.ok) {
+        //console.log(data);
+        return data;
+    } else {
+        throw new Error(data.message);
+    }
+}
+
+export const createGame = async (token: string) => {
+    const response = await fetch(`${baseURL}/game`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+            "authorization": `Bearer ${token}`
+        }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        return data;
     } else {
         throw new Error(data.message);
     }
