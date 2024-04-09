@@ -1,11 +1,13 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { login, register } from "../api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { atob } from 'react-native-quick-base64'
 
 interface IAuthContext {
     token: string;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
     isLoading: boolean;
 }
 
@@ -13,7 +15,8 @@ export const AuthContext = createContext<IAuthContext>({
     token: "",
     login: async () => {},
     register: async () => {},
-    isLoading: false
+    isLoading: false,
+    logout: async () => {}
 });
 
 export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
@@ -21,11 +24,43 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
     const [token, setToken] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
+    const isTokenExpired = (token: string): boolean => {
+    if (token) {
+        const [, payload] = token.split(".");
+        // Replace URL-specific base64url characters with standard base64 characters
+        let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+        // Pad base64 string to a length that is a multiple of 4
+        while (base64.length % 4 !== 0) {
+        base64 += '=';
+        }
+        try {
+        const decodedPayload = atob(base64);
+        const data = JSON.parse(decodedPayload);
+        return data.exp * 1000 < Date.now();
+        } catch (e) {
+        console.error("Failed to decode JWT:", e);
+        // Handle the error according to your application's needs
+        return true; // Assuming token is expired if it cannot be processed
+        }
+    }
+    return true;
+};
+
+      
+
     useEffect(() => {
         setIsLoading(true);
         AsyncStorage.getItem("token").then((value) => {
             if (value) {
-                setToken(value);
+                if (isTokenExpired(value)) {
+                    AsyncStorage.removeItem("token");
+                    value = "";
+                }
+                else{
+                    setToken(value);
+                    console.log(value);
+                }
+                
             }
         })
         .finally(() => {
@@ -55,12 +90,18 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
         }
     };
 
+    const handleLogout = async () => {
+        await AsyncStorage.removeItem("token");
+        setToken("");
+    };
+
     return (
         <AuthContext.Provider value={{
             token,
             login: handleLogin,
             register: handleRegister,
-            isLoading: isLoading
+            isLoading: isLoading,
+            logout: handleLogout
         }}>
             {children}
         </AuthContext.Provider>

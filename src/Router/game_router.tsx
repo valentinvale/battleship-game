@@ -2,18 +2,20 @@ import React from "react";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from "../Screens/Auth/LoginScreen";
 import RegisterScreen from "../Screens/Auth/RegisterScreen";
-import { AuthRoutesNames, GameRoutesNames } from "./routeNames";
+import { AuthRoutesNames, BottomTabsNames, GameRoutesNames } from "./routeNames";
 import { Text } from "react-native";
-import TableScreen from "../Screens/Game/TableScreen";
+import BottomTabs from "./BottomTabs";
+import LobbyScreen from "../Screens/Game/LobbyScreen";
 
-const AuthStack = createNativeStackNavigator();
+const GameStack = createNativeStackNavigator();
 
 const gameRoutes = (
-    <AuthStack.Navigator>
-        <AuthStack.Screen name={GameRoutesNames.TABLE} component={TableScreen} options={{
+    <GameStack.Navigator>
+        <GameStack.Screen name="Game" component={BottomTabs} options={{ headerShown: false }}/>
+        <GameStack.Screen name={BottomTabsNames.LOBBY} component={LobbyScreen} options={{
             headerTitle: (props) => <Text {...props}>Game</Text>
         }}/>
-    </AuthStack.Navigator>
+    </GameStack.Navigator>
 );
 
 export default gameRoutes;

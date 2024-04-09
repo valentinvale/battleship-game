@@ -55,7 +55,7 @@ export const listGames = async (token: string) => {
     //console.log(data);
 
     if (response.ok) {
-        //console.log(data);
+        console.log(data);
         return data;
     } else {
         throw new Error(data.message);
@@ -75,6 +75,46 @@ export const createGame = async (token: string) => {
     const data = await response.json();
 
     if (response.ok) {
+        return data;
+    } else {
+        throw new Error(data.message);
+    }
+}
+
+export const loadGame = async (token: string, gameId: string) => {
+    const response = await fetch(`${baseURL}/game/${gameId}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+            "authorization": `Bearer ${token}`
+        }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        console.log(data);
+        //return data;
+    } else {
+        throw new Error(data.message);
+    }
+}
+
+export const getUserDetals = async (token: string) => {
+    const response = await fetch(`${baseURL}/user/details/me`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+            "authorization": `Bearer ${token}`
+        }
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        console.log(data);
         return data;
     } else {
         throw new Error(data.message);
