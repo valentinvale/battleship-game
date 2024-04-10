@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import Login from "../../Components/Login"
 import { createGame, listGames, loadGame, login } from "../../api/api"
-import { AuthRoutesNames } from "../../Router/routeNames";
+import { AuthRoutesNames, GameRoutesNames } from "../../Router/routeNames";
 import { useAuth } from "../../Hooks/AuthContext";
 import { Text, FlatList, TouchableOpacity } from "react-native";
 import React, { useEffect, useState } from "react";
@@ -9,48 +9,52 @@ import GameListItem from "../../Components/GameListItem";
 import styled from "styled-components/native";
 import { Header } from "react-native/Libraries/NewAppScreen";
 
-const LobbyScreen = () => {
 
-    const auth = useAuth();
-
-    const [games, setGames] = useState<any[]>([]);
-
-    const Container = styled.View`
+const Container = styled.View`
         flex: 1;
         width: 100%;
     `;
 
-    const HeaderContainer = styled.View`
-        background-color: grey;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom-width: 2px;
-    `;
+const HeaderContainer = styled.View`
+    background-color: grey;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    border-bottom-width: 2px;
+`;
 
 
-    const CreateGameButton = styled.TouchableOpacity`
-        width: 80%;
-        height: 50px;
-        background-color: #3498db;
-        justify-content: center;
-        align-items: center;
-    `;
+const CreateGameButton = styled.TouchableOpacity`
+    width: 80%;
+    height: 50px;
+    background-color: #3498db;
+    justify-content: center;
+    align-items: center;
+`;
 
-    const TitleText = styled.Text`
-        font-size: 44px;
-        font-weight: bold;
-        margin-bottom: 20px;
-        color: #fff;
-    `;
-
-    const ButtonText = styled.Text`
-    font-size: 24px;
+const TitleText = styled.Text`
+    font-size: 44px;
     font-weight: bold;
+    margin-bottom: 20px;
     color: #fff;
-    `;
+`;
+
+const ButtonText = styled.Text`
+font-size: 24px;
+font-weight: bold;
+color: #fff;
+`;
+
+const LobbyScreen = () => {
+
+    const auth = useAuth();
+
+    const navigation = useNavigation<any>();
+
+    const [games, setGames] = useState<any[]>([]);
     
     useEffect(() => {
         listGames(auth.token).then((games) => {
@@ -81,7 +85,7 @@ const LobbyScreen = () => {
         <Container>
             <FlatList
                 data={games}
-                renderItem={({item}) => <GameListItem id={item.id} player1Mail={item.player1.email} onPress={() => loadGame(auth.token, item.id)} status={item.status} color="#3498db"/>}
+                renderItem={({item}) => <GameListItem id={item.id} player1Mail={item.player1.email} onPress={() => navigation.navigate(GameRoutesNames.TABLE, {gameId: item.id})} status={item.status} color="#3498db"/>}
                 keyExtractor={(item) => item.id}
             />
         </Container>

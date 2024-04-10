@@ -94,8 +94,8 @@ export const loadGame = async (token: string, gameId: string) => {
     const data = await response.json();
 
     if (response.ok) {
-        console.log(data);
-        //return data;
+        //console.log(data);
+        return data;
     } else {
         throw new Error(data.message);
     }
