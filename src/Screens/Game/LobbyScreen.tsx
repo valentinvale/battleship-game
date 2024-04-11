@@ -1,10 +1,10 @@
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Login from "../../Components/Login"
 import { createGame, listGames, loadGame, login } from "../../api/api"
 import { AuthRoutesNames, GameRoutesNames } from "../../Router/routeNames";
 import { useAuth } from "../../Hooks/AuthContext";
 import { Text, FlatList, TouchableOpacity } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import GameListItem from "../../Components/GameListItem";
 import styled from "styled-components/native";
 import { Header } from "react-native/Libraries/NewAppScreen";
@@ -64,6 +64,24 @@ const LobbyScreen = () => {
             console.log(games);
         })
     }, [])
+
+    const fetchGames = async () => {
+        try {
+            const response = await listGames(auth.token);
+            setGames(response.games);
+        } catch (error) {
+            console.error("Failed to fetch games:", error);
+        }
+    };
+
+    // useFocusEffect to refresh the game list whenever the screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchGames();
+            // Optional: Return a cleanup function if necessary
+            return () => {};
+        }, [auth.token]) // Include auth.token as a dependency if it might change
+    );
 
     const handleCreateGame = async () => {
         await createGame(auth.token);

@@ -1,10 +1,13 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
-import { login, register } from "../api/api";
+import { getUserDetals, login, register } from "../api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { atob } from 'react-native-quick-base64'
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 
 interface IAuthContext {
     token: string;
+    email: string;
+    id: string;
     login: (email: string, password: string) => Promise<void>;
     register: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
@@ -13,6 +16,8 @@ interface IAuthContext {
 
 export const AuthContext = createContext<IAuthContext>({
     token: "",
+    email: "",
+    id: "",
     login: async () => {},
     register: async () => {},
     isLoading: false,
@@ -22,6 +27,8 @@ export const AuthContext = createContext<IAuthContext>({
 export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
 
     const [token, setToken] = useState<string>("");
+    const [email, setEmail] = useState<string>("");
+    const [id, setId] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const isTokenExpired = (token: string): boolean => {
@@ -59,14 +66,21 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
                 else{
                     setToken(value);
                     console.log(value);
+                    getUserDetals(value).then((user) => {
+                        console.log("user-ul este", user.user.email);
+                        setEmail(user.user.email);
+                        setId(user.user.id);
+                    });
                 }
                 
             }
-        })
-        .finally(() => {
+        }).finally(() => {
             setIsLoading(false);
-        });
-    }, []);
+        }
+
+        );
+    }
+    , []);
 
     const handleLogin = async (email: string, password: string) => {
         try {
@@ -74,6 +88,10 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
             console.log(result);
             AsyncStorage.setItem("token", result);
             setToken(result);
+            getUserDetals(result).then((user) => {
+                setEmail(user.user.email);
+                setId(user.user.id);
+            });
         } 
         catch (error) {
             console.log(error);
@@ -84,6 +102,10 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
             const result = await register(email, password);
             AsyncStorage.setItem("token", result);
             setToken(result);
+            getUserDetals(result).then((user) => {
+                setEmail(user.user.email);
+                setId(user.user.id);
+            });
         } 
         catch (error) {
             console.log(error);
@@ -98,6 +120,8 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
     return (
         <AuthContext.Provider value={{
             token,
+            email,
+            id,
             login: handleLogin,
             register: handleRegister,
             isLoading: isLoading,
