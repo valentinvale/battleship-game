@@ -19,7 +19,7 @@ interface Move{
     x: string;
     y: number;
     result: boolean;
-    playerId: number;
+    playerId: string;
     gameId: string;
 }
 
@@ -41,7 +41,7 @@ interface Game {
         player1: User
         player2: User
         moves: Move[]
-        shipsCoords?: ShipCoord[]
+        shipsCoord?: ShipCoord[]
 }
 
 interface IGameContext{
@@ -61,9 +61,14 @@ export const GameContext: React.FC<{children: React.ReactNode}> = ({children}) =
     const [game, setGame] = useState<Game | null>(null);
 
     const handleLoadGame = async (id: string) => {
-        const result = await loadGame(auth.token, id);
-        setGame(result);
+        try {
+            const data = await loadGame(auth.token, id);
+            setGame(data);
+        } catch (error) {
+            console.error("Error loading game", error);
+        }
     }
+    
 
     return (
         <Context.Provider value={{loadGame: handleLoadGame, game}}>

@@ -171,3 +171,24 @@ export const sendMapConfiguration = async (token: string, gameId: string, shipsC
         throw new Error(data.message);
     }
 }
+
+export const strike = async (token: string, gameId: string, x: string, y: number) => {
+    const response = await fetch(`${baseURL}/game/strike/${gameId}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+            "authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({x, y})
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        console.log(data);
+        //return data;
+    } else {
+        throw new Error(data.message);
+    }
+}

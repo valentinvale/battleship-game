@@ -8,11 +8,11 @@ import ShipMapInput from "../../Components/ShipMapInput";
 
 import { Picker } from "@react-native-picker/picker";
 
-import Table from "../../Components/Table";
+import Table, { ICell } from "../../Components/Table";
 
 import styled from "styled-components/native";
 import { useAuth } from "../../Hooks/AuthContext";
-import { joinGame, sendMapConfiguration } from "../../api/api";
+import { joinGame, sendMapConfiguration, strike } from "../../api/api";
 
 const Container = styled.View`
     flex: 1;
@@ -62,23 +62,74 @@ const SendMapConfigButton = styled.TouchableOpacity`
     margin-bottom: 20px;
 `;
 
+const PlayerToMoveText = styled.Text`
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+`;
+
 const TableScreen = () => {
 
     const route = useRoute<any>();
 
     const gameContext = useGameContext();
     const auth = useAuth();
-    console.log(gameContext);
 
+    const [playerConfiguration, setPlayerConfiguration] = React.useState<string[][]>(
+        [['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','','']]
+    );
+
+    const [opponentConfiguration, setOpponentConfiguration] = React.useState<string[][]>(
+        [['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','','']]
+    );
+    
     useEffect(() => {
-        gameContext.loadGame(route.params.gameId).then(() => {
-            console.log("misca player ul cu id ul ", gameContext.game?.playerToMoveId);
-            console.log("auth id ", auth.id);
-            console.log("VERIFICARE ", gameContext.game?.playerToMoveId === auth.id)
+        const fetchGame = async () => {
+            await gameContext.loadGame(route.params.gameId);
+        };
+    
+        fetchGame();
+    }, [route.params.gameId]);
+    
+    useEffect(() => {
+        if (gameContext.game) {
+            console.log("Game loaded, player to move ID:", gameContext.game.playerToMoveId);
+            console.log("Auth ID:", auth.id);
+            console.log("Verification:", gameContext.game.playerToMoveId === auth.id);
+            getPlayerConfiguration();
+            getOpponentConfiguration();
         }
-        );
+    }, [gameContext.game]);
+
+    // useEffect(() => {
+    //     gameContext.loadGame(route.params.gameId).then(() => {
+    //         console.log(gameContext);
+    //         console.log("misca player ul cu id ul ", gameContext.game?.playerToMoveId);
+    //         console.log("auth id ", auth.id);
+    //         console.log("VERIFICARE ", gameContext.game?.playerToMoveId === auth.id)
+    //         getPlayerConfiguration();
+    //     }
+    //     );
         
-    }, []);
+    // }, []);
 
     const [shipConfigs, setShipConfigs] = React.useState<any[]>([
         { shipId: 0, positionX: 'A', positionY: 1, length: 2, direction: 'VERTICAL' },
@@ -128,6 +179,97 @@ const TableScreen = () => {
         
     }
 
+    const getPlayerConfiguration = () => {
+        if (gameContext.game) {
+            if(gameContext.game.status === 'ACTIVE'){
+                console.log("SHIPSS: ", gameContext.game.shipsCoord);
+                const config = [['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','','']];
+
+                gameContext.game?.shipsCoord?.forEach((ship) => {
+                    if(ship.hit){
+                        config[ship.y - 1][ship.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'X';
+                    }
+                    else{
+                        config[ship.y - 1][ship.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'O';
+                    }
+                });
+
+                gameContext.game?.moves.forEach((move) => {
+                    if(move.playerId !== auth.id){
+                        if(move.result === false){
+                            config[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'm';
+                        }
+                    }
+                }
+                );
+                console.log("CONFIG", config);
+                setPlayerConfiguration(config);
+            }
+        }
+    }
+
+    const getOpponentConfiguration = () => {
+        if(gameContext.game){
+            if(gameContext.game.status === 'ACTIVE'){
+                console.log("MISCARI: ", gameContext.game.moves);
+                const config = [['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','',''],
+                                ['','','','','','','','','','']];
+
+                gameContext.game.moves.forEach((move) => {
+                    if(move.playerId === auth.id){
+                        if(move.result){
+                            console.log("HIT: ", typeof(move.playerId), typeof(auth.id), move.playerId, auth.id);
+                            config[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'X';
+                        }
+                        else{
+                            config[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'O';
+                        }
+                    }
+                    
+                });
+                setOpponentConfiguration(config);
+            }
+        }
+    }
+
+    const handleStrike = (cell: ICell) => {
+        try{
+            if(gameContext.game?.status === 'ACTIVE' && gameContext.game?.playerToMoveId === auth.id){
+                strike(auth.token, gameContext.game.id, cell.x, cell.y).then(() => {
+                    gameContext.loadGame(route.params.gameId).then(() => {
+                        getOpponentConfiguration();
+                    });
+                    
+                }
+                );
+            }
+            else{
+                console.log("Nu este randul tau");
+            
+            }
+        }
+        catch (error){
+            console.log("eroare la strike", error);
+        }
+    }
+
     console.log(route.params);
     return (
         <ScrollView>
@@ -140,33 +282,20 @@ const TableScreen = () => {
                         <ButtonText>Join Game</ButtonText>
                     </JoinButton>
                 ) : null}
+                {gameContext.game?.status === 'ACTIVE' ? (
+                    <PlayerToMoveText>
+                        {gameContext.game?.playerToMoveId === auth.id ? 'Your Turn' : 'Opponent\'s Turn'}
+                    </PlayerToMoveText>
+                ) : null}
                 <TableContainer>
-                    <Table state={
-                        [['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','','']]
+                    <Table onCellPress={handleStrike} state={
+                        opponentConfiguration
                     } />
                 </TableContainer>
 
                 <TableContainer>
                     <Table state={
-                        [['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','',''],
-                        ['','','','','','','','','','']]
+                        playerConfiguration
                     } />
                 </TableContainer>
                 
