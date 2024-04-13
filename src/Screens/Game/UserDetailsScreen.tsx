@@ -77,6 +77,12 @@ const UserDetailsScreen = () => {
             
             <DetailContainer>
                 <DetailText>
+                    Games Played: {user?.gamesPlayed}
+                </DetailText>
+            </DetailContainer>
+
+            <DetailContainer>
+                <DetailText>
                     Games Currently Playing: {user?.currentlyGamesPlaying}
                 </DetailText>
             </DetailContainer>

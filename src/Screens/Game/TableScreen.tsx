@@ -68,6 +68,15 @@ const PlayerToMoveText = styled.Text`
     margin-bottom: 20px;
 `;
 
+const ReplayGameButton = styled.TouchableOpacity`
+    width: 80%;
+    height: 50px;
+    background-color: #3498db;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+`;
+
 const TableScreen = () => {
 
     const route = useRoute<any>();
@@ -100,6 +109,35 @@ const TableScreen = () => {
         ['','','','','','','','','',''],
         ['','','','','','','','','','']]
     );
+
+    const [playerConfigurationReplay, setPlayerConfigurationReplay] = React.useState<string[][]>(
+        [['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','','']]
+    );
+
+    const [opponentConfigurationReplay, setOpponentConfigurationReplay] = React.useState<string[][]>(
+        [['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','',''],
+        ['','','','','','','','','','']]
+    );
+
+    const [replayIndex, setReplayIndex] = React.useState<number>(0);
+    const [isReplaying, setIsReplaying] = React.useState<boolean>(false);
     
     useEffect(() => {
         const fetchGame = async () => {
@@ -112,6 +150,7 @@ const TableScreen = () => {
     useEffect(() => {
         if (gameContext.game) {
             console.log("Game loaded, player to move ID:", gameContext.game.playerToMoveId);
+            console.log("JOCUL: ", gameContext.game);
             console.log("Auth ID:", auth.id);
             console.log("Verification:", gameContext.game.playerToMoveId === auth.id);
             getPlayerConfiguration();
@@ -181,7 +220,7 @@ const TableScreen = () => {
 
     const getPlayerConfiguration = () => {
         if (gameContext.game) {
-            if(gameContext.game.status === 'ACTIVE'){
+            if(gameContext.game.status === 'ACTIVE' || gameContext.game.status === 'FINISHED'){
                 console.log("SHIPSS: ", gameContext.game.shipsCoord);
                 const config = [['','','','','','','','','',''],
                                 ['','','','','','','','','',''],
@@ -219,7 +258,7 @@ const TableScreen = () => {
 
     const getOpponentConfiguration = () => {
         if(gameContext.game){
-            if(gameContext.game.status === 'ACTIVE'){
+            if(gameContext.game.status === 'ACTIVE' || gameContext.game.status === 'FINISHED'){
                 console.log("MISCARI: ", gameContext.game.moves);
                 const config = [['','','','','','','','','',''],
                                 ['','','','','','','','','',''],
@@ -251,7 +290,17 @@ const TableScreen = () => {
 
     const handleStrike = (cell: ICell) => {
         try{
+
+            
+
             if(gameContext.game?.status === 'ACTIVE' && gameContext.game?.playerToMoveId === auth.id){
+
+                //verifica daca e deja ocupata celula 
+                if(opponentConfiguration[cell.y - 1][cell.x.charCodeAt(0) - 'A'.charCodeAt(0)] !== ''){
+                    console.log("Celula ocupata");
+                    return;
+                }
+
                 strike(auth.token, gameContext.game.id, cell.x, cell.y).then(() => {
                     gameContext.loadGame(route.params.gameId).then(() => {
                         getOpponentConfiguration();
@@ -270,6 +319,83 @@ const TableScreen = () => {
         }
     }
 
+    const getWinnerName = () => {
+        if(gameContext.game?.status === 'FINISHED'){
+            const lastPlayerToMoveId = gameContext.game?.moves[gameContext.game?.moves.length - 1].playerId;
+            if(lastPlayerToMoveId === gameContext.game?.player1.id){
+                return gameContext.game?.player1?.email;
+            }
+            else{
+                return gameContext.game?.player2.email;
+            }
+        }
+    }
+
+    useEffect(() => {
+        if(gameContext.game){
+            if (isReplaying && replayIndex < gameContext.game?.moves.length) {
+                const timer = setTimeout(() => {
+                    handleReplay(replayIndex);
+                    setReplayIndex(replayIndex + 1);
+                }, 1000);
+                return () => clearTimeout(timer);
+            } else if (replayIndex >= gameContext.game?.moves.length) {
+                setPlayerConfigurationReplay([
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','','']]
+                )
+                setOpponentConfigurationReplay([
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','',''],
+                    ['','','','','','','','','','']]
+                )
+
+                                            
+                setReplayIndex(0);
+                setIsReplaying(false);
+            }
+        }
+        
+    }, [replayIndex, isReplaying]);
+
+    const handleReplay = (index: number) => {
+        const move = gameContext.game?.moves[index];
+        if (move) {
+            if (move.playerId === gameContext.game?.player1.id) {
+                const newConfig = opponentConfigurationReplay.map((row) => [...row]);
+                if (move.result) {
+                    newConfig[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'X';
+                } else {
+                    newConfig[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'O';
+                }
+                setOpponentConfigurationReplay(newConfig);
+            } else {
+                const newConfig = playerConfigurationReplay.map((row) => [...row]);
+                if (move.result) {
+                    newConfig[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'X';
+                } else {
+                    newConfig[move.y - 1][move.x.charCodeAt(0) - 'A'.charCodeAt(0)] = 'O';
+                }
+                setPlayerConfigurationReplay(newConfig);
+            }
+        }
+    }
+
     console.log(route.params);
     return (
         <ScrollView>
@@ -284,22 +410,34 @@ const TableScreen = () => {
                 ) : null}
                 {gameContext.game?.status === 'ACTIVE' ? (
                     <PlayerToMoveText>
-                        {gameContext.game?.playerToMoveId === auth.id ? 'Your Turn' : 'Opponent\'s Turn'}
+                        {gameContext.game?.playerToMoveId === gameContext.game?.player1Id ? gameContext.game?.player1.email + "'s turn" : gameContext.game?.player2.email + "'s turn"}
                     </PlayerToMoveText>
                 ) : null}
-                <TableContainer>
+
+                {
+                    gameContext.game?.status === 'FINISHED' ? (
+                        <PlayerToMoveText>{getWinnerName()} won!</PlayerToMoveText>
+                    ) : null
+                }
+
+                {(gameContext.game?.status === 'ACTIVE' || gameContext.game?.status === 'FINISHED') && (auth.id === gameContext.game?.player1.id || auth.id === gameContext.game?.player2?.id) ? (
+                    console.log("ID-uri", gameContext.game?.player1.id, gameContext.game?.player2?.id, auth.id),
+                    <>
+                        <TableContainer>
                     <Table onCellPress={handleStrike} state={
                         opponentConfiguration
                     } />
-                </TableContainer>
+                    </TableContainer>
 
-                <TableContainer>
-                    <Table state={
-                        playerConfiguration
+                    <TableContainer>
+                        <Table state={
+                            playerConfiguration
                     } />
-                </TableContainer>
+                    </TableContainer>
+                    </>
+                ) : null}
                 
-                {gameContext.game?.status === 'MAP_CONFIG' ? (
+                {(gameContext.game?.status === 'MAP_CONFIG') && (auth.id === gameContext.game.player1Id || auth.id === gameContext.game.player2Id) ? (
                     <FormContainer>
                         <ShipMapInput shipId={0} length={2} onConfigChange={handleShipConfig} />
                         <ShipMapInput shipId={1} length={2} onConfigChange={handleShipConfig} />
@@ -316,6 +454,25 @@ const TableScreen = () => {
                         </SendMapConfigButton>
                     </FormContainer>
                 ) : null}
+
+                {gameContext.game?.status === 'FINISHED' ? (
+                    <ReplayGameButton onPress={() => setIsReplaying(true)}>
+                        <ButtonText>Replay Game</ButtonText>
+                    </ReplayGameButton>
+                ) : null}
+
+                {gameContext.game?.status === 'FINISHED' ? (
+                    <TableContainer>
+                        <Table state={opponentConfigurationReplay} />
+                    </TableContainer>
+                ) : null}
+
+                {gameContext.game?.status === 'FINISHED' ? (
+                    <TableContainer>
+                        <Table state={playerConfigurationReplay} />
+                    </TableContainer>
+                ) : null}   
+                
 
             </Container>
         </ScrollView>
