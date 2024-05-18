@@ -74,13 +74,11 @@ const LobbyScreen = () => {
         }
     };
 
-    // useFocusEffect to refresh the game list whenever the screen comes into focus
     useFocusEffect(
         useCallback(() => {
             fetchGames();
-            // Optional: Return a cleanup function if necessary
             return () => {};
-        }, [auth.token]) // Include auth.token as a dependency if it might change
+        }, [auth.token])
     );
 
     const handleCreateGame = async () => {

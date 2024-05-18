@@ -27,7 +27,6 @@ const Row = styled.View`
     flex-direction: row;
 `;
 
-// Add a new styled component for the table container
 const TableContainer = styled.View`
     flex-direction: column;
 `;

@@ -16,7 +16,7 @@ function BottomTabs() {
       <Tab.Screen name={BottomTabsNames.LOBBY} component={LobbyScreen} 
         options={{
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="home" size={size} color={color} /> // Use the appropriate icon name
+            <FontAwesome name="home" size={size} color={color} /> 
           ),
           title: 'Lobby',
         }}
@@ -24,7 +24,7 @@ function BottomTabs() {
       <Tab.Screen name={BottomTabsNames.USERDETAILS} component={UserDetailsScreen} 
         options={{
           tabBarIcon: ({ color, size }) => (
-            <FontAwesome name="user" size={size} color={color} /> // Use the appropriate icon name
+            <FontAwesome name="user" size={size} color={color} /> 
           ),
           title: 'User Details',
         }}

@@ -6,6 +6,15 @@ const RegisterScreen = () => {
 
     const auth = useAuth();
 
-    return <Register onSubmit={auth.register}/>
+    const handleRegister = async (email: string, password: string) => {
+        auth.register(email, password).then(() => {
+            auth.login(email, password);
+        }).catch((error) => {
+            console.log(error);
+        });
+        
+    }
+
+    return <Register onSubmit={handleRegister}/>
 }
 export default RegisterScreen;

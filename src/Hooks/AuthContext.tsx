@@ -34,9 +34,7 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
     const isTokenExpired = (token: string): boolean => {
     if (token) {
         const [, payload] = token.split(".");
-        // Replace URL-specific base64url characters with standard base64 characters
         let base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-        // Pad base64 string to a length that is a multiple of 4
         while (base64.length % 4 !== 0) {
         base64 += '=';
         }
@@ -46,8 +44,7 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
         return data.exp * 1000 < Date.now();
         } catch (e) {
         console.error("Failed to decode JWT:", e);
-        // Handle the error according to your application's needs
-        return true; // Assuming token is expired if it cannot be processed
+        return true;
         }
     }
     return true;
@@ -100,12 +97,12 @@ export const AuthContextProvider: React.FC<{children: React.ReactNode}> = ({chil
     const handleRegister = async (email: string, password: string) => {
         try {
             const result = await register(email, password);
-            AsyncStorage.setItem("token", result);
-            setToken(result);
-            getUserDetals(result).then((user) => {
-                setEmail(user.user.email);
-                setId(user.user.id);
-            });
+            // AsyncStorage.setItem("token", result);
+            // setToken(result);
+            // getUserDetals(result).then((user) => {
+            //     setEmail(user.user.email);
+            //     setId(user.user.id);
+            // });
         } 
         catch (error) {
             console.log(error);
